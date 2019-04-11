@@ -1,0 +1,2 @@
+FROM clux/muslrust:stable AS base
+RUN rustup component add clippy rustfmt

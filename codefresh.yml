@@ -6,10 +6,23 @@ stages:
 - cargo-publish
 
 steps:
+  build_test:
+    type: build
+    stage: test
+    title: Build test image
+    dockerfile: Dockerfile-test
+    image_name: clux/muslrust
+    tag: test
+    when:
+      steps:
+      - name: main_clone
+        on:
+        - success
+
   test:
     title: Run tests
     stage: test
-    image: guangie88/rust:latest
+    image: ${{build_test}}
     working_directory: ${{main_clone}}
     commands:
     - cargo fmt -v --all -- --check
@@ -17,14 +30,14 @@ steps:
     - cargo test -v --locked --all
     when:
       steps:
-      - name: main_clone
+      - name: build_test
         on:
         - success
 
   build_release:
     title: Build release
     stage: native-release
-    image: guangie88/rust:latest
+    image: clux/
     working_directory: ${{main_clone}}
     commands:
     - cargo build --release -v --locked --all
@@ -72,7 +85,7 @@ steps:
   cargo_cli_publish:
     title: Publish to Cargo for CLI
     stage: cargo-publish
-    image: guangie88/rust:latest
+    image: clux/muslrust:stable
     working_directory: ${{main_clone}}
     commands:
     - cargo login ${{CRATES_TOKEN}}
