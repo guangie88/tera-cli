@@ -37,7 +37,7 @@ steps:
   build_release:
     title: Build release
     stage: native-release
-    image: clux/
+    image: clux/muslrust:stable
     working_directory: ${{main_clone}}
     commands:
     - cargo build --release -v --locked --all
