@@ -46,16 +46,16 @@ struct Input {
 #[structopt(raw(group = "format_arg_group()"))]
 struct ContextFormat {
     /// TOML file path to read context values.
-    /// "." to indicate reading from default ".tera.toml".
+    /// "." to indicate reading from default ".tera.toml"
     #[structopt(name = "toml", long, group = "format", parse(from_os_str))]
     toml: Option<PathBuf>,
 
     /// JSON file path to read context values.
-    /// "." to indicate reading from default ".tera.json".
+    /// "." to indicate reading from default ".tera.json"
     #[structopt(name = "json", long, group = "format", parse(from_os_str))]
     json: Option<PathBuf>,
 
-    /// Use env vars as the context instead.
+    /// Use env vars as the context instead
     #[structopt(name = "env", long, group = "format")]
     env: bool,
 }
@@ -70,11 +70,11 @@ struct Args {
     #[structopt(flatten)]
     context: ContextFormat,
 
-    /// Root key to embed the context configuration into.
+    /// Root key to embed the context configuration into
     #[structopt(short = "r", long = "root", default_value = "c")]
     root_key: String,
 
-    /// HTML auto-escape rendered content.
+    /// HTML auto-escape rendered content
     #[structopt(long = "escape")]
     autoescape: bool,
 }
