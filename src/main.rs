@@ -1,10 +1,10 @@
+use clap::arg_enum;
 use std::{
     error::Error,
     fs,
     io::{self, Read},
     path::PathBuf,
 };
-use clap::arg_enum;
 use structopt::StructOpt;
 use tera::{Context, Tera};
 use toml::Value;
@@ -42,11 +42,18 @@ struct Args {
     #[structopt(subcommand)]
     input: Input,
 
-    #[structopt(raw(possible_values = "&ContextType::variants()", case_insensitive = "true"))]
+    #[structopt(raw(
+        possible_values = "&ContextType::variants()",
+        case_insensitive = "true"
+    ))]
     context: ContextType,
 
     #[structopt(parse(from_os_str))]
     context_path: Option<PathBuf>,
+
+    /// Root key to embed the context configuration into.
+    #[structopt(short = "r", long = "root", default_value = "c")]
+    root_key: String,
 }
 
 fn main() -> Result<(), DynError> {
@@ -77,7 +84,7 @@ fn main() -> Result<(), DynError> {
             let value = content.parse::<Value>()?;
 
             let mut context = Context::new();
-            context.insert("c", &value);
+            context.insert(&conf.root_key, &value);
             context
         }
     };
