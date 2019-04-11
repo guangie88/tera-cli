@@ -17,14 +17,14 @@ steps:
     - cargo test -v --locked --all
     when:
       steps:
-      - name: build_test
+      - name: main_clone
         on:
         - success
 
   build_release:
     title: Build release
     stage: native-release
-    image: clux/muslrust:stable
+    image: guangie88/rust:latest
     working_directory: ${{main_clone}}
     commands:
     - cargo build --release -v --locked --all
@@ -42,8 +42,8 @@ steps:
     commands:
     - mkdir -p target/x86_64-unknown-linux-musl/release-compressed
     - cd target/x86_64-unknown-linux-musl
-    - cp release/envja release-compressed/envja_linux_amd64
-    - upx --best release-compressed/envja_linux_amd64
+    - cp release/tera release-compressed/tera_linux_amd64
+    - upx --best release-compressed/tera_linux_amd64
     when:
       steps:
       - name: build_release
@@ -58,7 +58,7 @@ steps:
     commands:
     - |-
       ghr -t ${{GITHUB_TOKEN}} -u ${{CF_REPO_OWNER}} -r ${{CF_REPO_NAME}} \
-          -c ${{CF_REVISION}} -replace ${{CF_RELEASE_TAG}} envja_linux_amd64
+          -c ${{CF_REVISION}} -replace ${{CF_RELEASE_TAG}} tera_linux_amd64
     when:
       condition:
         all:
@@ -72,7 +72,7 @@ steps:
   cargo_cli_publish:
     title: Publish to Cargo for CLI
     stage: cargo-publish
-    image: clux/muslrust:stable
+    image: guangie88/rust:latest
     working_directory: ${{main_clone}}
     commands:
     - cargo login ${{CRATES_TOKEN}}
