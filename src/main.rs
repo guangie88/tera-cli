@@ -1,14 +1,15 @@
+use serde_json;
 use std::{
     collections::HashMap,
     env,
     error::Error,
     fs,
     io::{self, Read},
-    path::PathBuf,
+    path::{Path, PathBuf},
 };
 use structopt::{clap::ArgGroup, StructOpt};
 use tera::{Context, Tera};
-use toml::Value;
+use toml;
 
 type DynError = Box<dyn Error>;
 type CliResult<T> = Result<T, DynError>;
@@ -49,6 +50,11 @@ struct ContextFormat {
     #[structopt(name = "toml", long, group = "format", parse(from_os_str))]
     toml: Option<PathBuf>,
 
+    /// JSON file path to read context values.
+    /// "." to indicate reading from default ".tera.json".
+    #[structopt(name = "json", long, group = "format", parse(from_os_str))]
+    json: Option<PathBuf>,
+
     /// Use env vars as the context instead.
     #[structopt(name = "env", long, group = "format")]
     env: bool,
@@ -85,15 +91,26 @@ fn read_template(conf: &Args) -> CliResult<String> {
     }
 }
 
+fn get_config_path(path: &Path, ext: &str) -> PathBuf {
+    if path.as_os_str() != "." {
+        path.to_path_buf()
+    } else {
+        PathBuf::from(format!(".tera{}", ext))
+    }
+}
+
 fn read_context(conf: &Args) -> CliResult<Context> {
     if let Some(ref path) = conf.context.toml {
-        let actual_path = if path.as_os_str() != "." {
-            path.clone()
-        } else {
-            PathBuf::from(".tera.toml")
-        };
-
-        let value = fs::read_to_string(&actual_path)?.parse::<Value>()?;
+        // TOML
+        let path = get_config_path(path, ".toml");
+        let value = fs::read_to_string(&path)?.parse::<toml::Value>()?;
+        let mut context = Context::new();
+        context.insert(&conf.root_key, &value);
+        Ok(context)
+    } else if let Some(ref path) = conf.context.json {
+        // JSON
+        let path = get_config_path(path, ".json");
+        let value = fs::read_to_string(&path)?.parse::<serde_json::Value>()?;
         let mut context = Context::new();
         context.insert(&conf.root_key, &value);
         Ok(context)
