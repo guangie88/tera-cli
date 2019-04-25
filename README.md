@@ -8,8 +8,9 @@ Tera CLI for one-off template interpolation from context file / env vars.
 
 The following context formats are supported:
 
-- TOML context file
-- JSON context file
+- JSON context file (`--json .` defaults to `.tera.json`)
+- TOML context file (`--toml .` defaults to `.tera.toml`)
+- YAML context file (`--yaml .` defaults to `.tera.yml`)
 - Environment variables
 
 ## Simple Examples
