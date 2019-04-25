@@ -62,7 +62,10 @@ struct ContextFormat {
 
 /// Tera CLI arguments
 #[derive(StructOpt, Debug)]
-#[structopt(name = "args")]
+#[structopt(
+    name = "Tera CLI",
+    about = "Tera CLI to apply template using config values / env vars"
+)]
 struct Args {
     #[structopt(flatten)]
     input: Input,
