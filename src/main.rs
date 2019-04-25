@@ -1,4 +1,5 @@
 use serde_json;
+use serde_yaml;
 use std::{
     collections::HashMap,
     env,
@@ -54,6 +55,11 @@ struct ContextFormat {
     /// "." to indicate reading from default ".tera.json"
     #[structopt(name = "json", long, group = "format", parse(from_os_str))]
     json: Option<PathBuf>,
+
+    /// YAML file path to read context values.
+    /// "." to indicate reading from default ".tera.yml"
+    #[structopt(name = "yaml", long, group = "format", parse(from_os_str))]
+    yaml: Option<PathBuf>,
 
     /// Use env vars as the context instead
     #[structopt(name = "env", long, group = "format")]
@@ -114,6 +120,14 @@ fn read_context(conf: &Args) -> CliResult<Context> {
         // JSON
         let path = get_config_path(path, ".json");
         let value = fs::read_to_string(&path)?.parse::<serde_json::Value>()?;
+        let mut context = Context::new();
+        context.insert(&conf.root_key, &value);
+        Ok(context)
+    } else if let Some(ref path) = conf.context.yaml {
+        // YAML
+        let path = get_config_path(path, ".yml");
+        let value: serde_yaml::Value =
+            serde_yaml::from_str(&fs::read_to_string(&path)?)?;
         let mut context = Context::new();
         context.insert(&conf.root_key, &value);
         Ok(context)
