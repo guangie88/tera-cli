@@ -11,7 +11,7 @@
 
 ## `v0.1.1`
 
-- Add YAML support to CLI (#3).
+- Add YAML support to CLI ([#3](https://github.com/guangie88/tera-cli/pull/3)).
 
 ## `v0.1.0`
 
