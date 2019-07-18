@@ -171,8 +171,12 @@ fn read_context(conf: &Args) -> CliResult<Context> {
             .context(FileRead { path })?
             .parse::<serde_json::Value>()
             .context(JsonParsing)?;
+        let object = value.as_object().context(InvalidValueType)?;
+
         let mut context = Context::new();
-        context.insert(&conf.root_key, &value);
+        for (k, v) in object.iter() {
+            context.insert(k, v);
+        }
         Ok(context)
     } else if let Some(ref path) = conf.context.yaml {
         // YAML
