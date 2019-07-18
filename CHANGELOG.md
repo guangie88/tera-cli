@@ -1,9 +1,11 @@
 # CHANGELOG
 
-## Unreleased
+## `v0.2.0`
 
-- Drops root key support entirely. Only allow variable file to contain
-  `map[string, value]` at root. The keys of the map now forms the root keys.
+- Drops root key support entirely
+  ([#4](https://github.com/guangie88/tera-cli/pull/4)).
+  Only allow variable file to contain `map[string, value]` at root. The keys of
+  the map now forms the root keys.
 
   That is, if env var `MSG` has the value `"hello"`, previously the template
   string to use was `{{ c.MSG }}`. Now the template string to use should be
