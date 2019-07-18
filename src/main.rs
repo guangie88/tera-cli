@@ -1,6 +1,6 @@
 use serde_json;
 use serde_yaml;
-use snafu::{Backtrace, OptionExt, ResultExt, Snafu};
+use snafu::{Backtrace, ErrorCompat, OptionExt, ResultExt, Snafu};
 use std::{
     collections::HashMap,
     env, fs,
@@ -21,7 +21,7 @@ enum Error {
     },
 
     #[snafu(display("Vars file does not contain a map value"))]
-    InvalidValueType,
+    InvalidValueType {},
 
     #[snafu(display("JSON vars parsing error: {}", source))]
     JsonParsing {
@@ -47,7 +47,7 @@ enum Error {
         backtrace: Backtrace,
     },
 
-    #[snafu(display("One of the YAML keys is not a string:\n{:#?}", key,))]
+    #[snafu(display("One of the YAML keys is not a string:\n{:#?}", key))]
     YamlInvalidKey { key: serde_yaml::Value },
 
     #[snafu(display("YAML vars parsing error: {}", source))]
@@ -208,7 +208,7 @@ fn read_context(conf: &Args) -> CliResult<Context> {
     }
 }
 
-fn main() -> CliResult<()> {
+fn main_inner() -> CliResult<()> {
     let conf = Args::from_args();
 
     // Read context first because the template might possibly be read from STDIN
@@ -219,4 +219,18 @@ fn main() -> CliResult<()> {
 
     print!("{}", rendered);
     Ok(())
+}
+
+fn main() {
+    if let Err(e) = main_inner() {
+        eprintln!("{}", e);
+
+        if let Ok(v) = env::var("RUST_BACKTRACE") {
+            if v == "1" {
+                if let Some(backtrace) = ErrorCompat::backtrace(&e) {
+                    eprintln!("{}", backtrace);
+                }
+            }
+        }
+    }
 }
