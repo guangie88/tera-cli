@@ -47,6 +47,9 @@ enum Error {
         backtrace: Backtrace,
     },
 
+    #[snafu(display("One of the YAML keys is not a string:\n{:#?}", key,))]
+    YamlInvalidKey { key: serde_yaml::Value },
+
     #[snafu(display("YAML vars parsing error: {}", source))]
     YamlParsing {
         source: serde_yaml::Error,
@@ -120,10 +123,6 @@ struct Args {
     #[structopt(flatten)]
     context: ContextFormat,
 
-    /// Root key to embed the context configuration into
-    #[structopt(short = "r", long = "root", default_value = "c")]
-    root_key: String,
-
     /// HTML auto-escape rendered content
     #[structopt(long = "escape")]
     autoescape: bool,
@@ -185,13 +184,23 @@ fn read_context(conf: &Args) -> CliResult<Context> {
             &fs::read_to_string(&path).context(FileRead { path })?,
         )
         .context(YamlParsing)?;
+
+        // YAML specs for mapping allows for keys to be YAML value
+        // so have to individually check for the root level keys to be strings
+        let mapping = value.as_mapping().context(InvalidValueType)?;
+
         let mut context = Context::new();
-        context.insert(&conf.root_key, &value);
+        for (k, v) in mapping.iter() {
+            let k = k.as_str().context(YamlInvalidKey { key: k.clone() })?;
+            context.insert(k, v);
+        }
         Ok(context)
     } else if conf.context.env {
         let env_vars = env::vars().collect::<HashMap<String, String>>();
         let mut context = Context::new();
-        context.insert(&conf.root_key, &env_vars);
+        for (k, v) in env_vars.iter() {
+            context.insert(k, v);
+        }
         Ok(context)
     } else {
         // Empty context, useless but still valid
