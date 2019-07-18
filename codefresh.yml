@@ -1,11 +1,20 @@
 version: '1.0'
 mode: parallel
 stages:
+- clone
 - test
 - native-release
 - cargo-publish
 
 steps:
+  main_clone:
+    title: Clone main repository
+    type: git-clone
+    stage: clone
+    git: github
+    repo: ${{CF_REPO_OWNER}}/${{CF_REPO_NAME}}
+    revision: ${{CF_REVISION}}
+
   build_test:
     type: build
     stage: test
@@ -56,7 +65,7 @@ steps:
     - mkdir -p target/x86_64-unknown-linux-musl/release-compressed
     - cd target/x86_64-unknown-linux-musl
     - cp release/tera release-compressed/tera_linux_amd64
-    - upx --best release-compressed/tera_linux_amd64
+    - upx --best --lzma release-compressed/tera_linux_amd64
     when:
       steps:
       - name: build_release

@@ -1,10 +1,9 @@
 use serde_json;
 use serde_yaml;
+use snafu::{Backtrace, ErrorCompat, OptionExt, ResultExt, Snafu};
 use std::{
     collections::HashMap,
-    env,
-    error::Error,
-    fs,
+    env, fs,
     io::{self, Read},
     path::{Path, PathBuf},
 };
@@ -12,8 +11,53 @@ use structopt::{clap::ArgGroup, StructOpt};
 use tera::{Context, Tera};
 use toml;
 
-type DynError = Box<dyn Error>;
-type CliResult<T> = Result<T, DynError>;
+#[derive(Debug, Snafu)]
+enum Error {
+    #[snafu(display("Could not read from file \"{}\": {}", path.display(), source))]
+    FileRead {
+        path: PathBuf,
+        source: std::io::Error,
+        backtrace: Backtrace,
+    },
+
+    #[snafu(display("Vars file does not contain a map value"))]
+    InvalidValueType {},
+
+    #[snafu(display("JSON vars parsing error: {}", source))]
+    JsonParsing {
+        source: serde_json::Error,
+        backtrace: Backtrace,
+    },
+
+    #[snafu(display("Could not read from stdin: {}", source))]
+    StdinRead {
+        source: std::io::Error,
+        backtrace: Backtrace,
+    },
+
+    #[snafu(display("Tera application error: {}", source))]
+    TeraApply {
+        source: tera::Error,
+        backtrace: Backtrace,
+    },
+
+    #[snafu(display("TOML vars parsing error: {}", source))]
+    TomlParsing {
+        source: toml::de::Error,
+        backtrace: Backtrace,
+    },
+
+    #[snafu(display("One of the YAML keys is not a string:\n{:#?}", key))]
+    YamlInvalidKey { key: serde_yaml::Value },
+
+    #[snafu(display("YAML vars parsing error: {}", source))]
+    YamlParsing {
+        source: serde_yaml::Error,
+        backtrace: Backtrace,
+    },
+}
+
+type CliResult<T, E = Error> = std::result::Result<T, E>;
 
 fn input_arg_group() -> ArgGroup<'static> {
     ArgGroup::with_name("input")
@@ -57,7 +101,7 @@ struct ContextFormat {
     json: Option<PathBuf>,
 
     /// YAML file path to read context values.
-    /// "." to indicate reading from default ".tera.yml"
+    /// "." to indicate reading from default ".tera.yaml"
     #[structopt(name = "yaml", long, group = "format", parse(from_os_str))]
     yaml: Option<PathBuf>,
 
@@ -79,10 +123,6 @@ struct Args {
     #[structopt(flatten)]
     context: ContextFormat,
 
-    /// Root key to embed the context configuration into
-    #[structopt(short = "r", long = "root", default_value = "c")]
-    root_key: String,
-
     /// HTML auto-escape rendered content
     #[structopt(long = "escape")]
     autoescape: bool,
@@ -90,12 +130,12 @@ struct Args {
 
 fn read_template(conf: &Args) -> CliResult<String> {
     if let Some(ref path) = conf.input.file {
-        Ok(fs::read_to_string(&path)?)
+        Ok(fs::read_to_string(&path).context(FileRead { path })?)
     } else if let Some(ref content) = conf.input.string {
         Ok(content.clone())
     } else {
         let mut buffer = String::new();
-        io::stdin().read_to_string(&mut buffer)?;
+        io::stdin().read_to_string(&mut buffer).context(StdinRead)?;
         Ok(buffer)
     }
 }
@@ -112,29 +152,55 @@ fn read_context(conf: &Args) -> CliResult<Context> {
     if let Some(ref path) = conf.context.toml {
         // TOML
         let path = get_config_path(path, ".toml");
-        let value = fs::read_to_string(&path)?.parse::<toml::Value>()?;
+        let value = fs::read_to_string(&path)
+            .context(FileRead { path })?
+            .parse::<toml::Value>()
+            .context(TomlParsing)?;
+        let table = value.as_table().context(InvalidValueType)?;
+
         let mut context = Context::new();
-        context.insert(&conf.root_key, &value);
+        for (k, v) in table.iter() {
+            context.insert(k, v);
+        }
         Ok(context)
     } else if let Some(ref path) = conf.context.json {
         // JSON
         let path = get_config_path(path, ".json");
-        let value = fs::read_to_string(&path)?.parse::<serde_json::Value>()?;
+        let value = fs::read_to_string(&path)
+            .context(FileRead { path })?
+            .parse::<serde_json::Value>()
+            .context(JsonParsing)?;
+        let object = value.as_object().context(InvalidValueType)?;
+
         let mut context = Context::new();
-        context.insert(&conf.root_key, &value);
+        for (k, v) in object.iter() {
+            context.insert(k, v);
+        }
         Ok(context)
     } else if let Some(ref path) = conf.context.yaml {
         // YAML
-        let path = get_config_path(path, ".yml");
-        let value: serde_yaml::Value =
-            serde_yaml::from_str(&fs::read_to_string(&path)?)?;
+        let path = get_config_path(path, ".yaml");
+        let value: serde_yaml::Value = serde_yaml::from_str(
+            &fs::read_to_string(&path).context(FileRead { path })?,
+        )
+        .context(YamlParsing)?;
+
+        // YAML specs for mapping allows for keys to be YAML value
+        // so have to individually check for the root level keys to be strings
+        let mapping = value.as_mapping().context(InvalidValueType)?;
+
         let mut context = Context::new();
-        context.insert(&conf.root_key, &value);
+        for (k, v) in mapping.iter() {
+            let k = k.as_str().context(YamlInvalidKey { key: k.clone() })?;
+            context.insert(k, v);
+        }
         Ok(context)
     } else if conf.context.env {
         let env_vars = env::vars().collect::<HashMap<String, String>>();
         let mut context = Context::new();
-        context.insert(&conf.root_key, &env_vars);
+        for (k, v) in env_vars.iter() {
+            context.insert(k, v);
+        }
         Ok(context)
     } else {
         // Empty context, useless but still valid
@@ -142,14 +208,29 @@ fn read_context(conf: &Args) -> CliResult<Context> {
     }
 }
 
-fn main() -> CliResult<()> {
+fn main_inner() -> CliResult<()> {
     let conf = Args::from_args();
 
     // Read context first because the template might possibly be read from STDIN
     let context = read_context(&conf)?;
     let template = read_template(&conf)?;
-    let rendered = Tera::one_off(&template, &context, conf.autoescape)?;
+    let rendered = Tera::one_off(&template, &context, conf.autoescape)
+        .context(TeraApply)?;
 
     print!("{}", rendered);
     Ok(())
+}
+
+fn main() {
+    if let Err(e) = main_inner() {
+        eprintln!("{}", e);
+
+        if let Ok(v) = env::var("RUST_BACKTRACE") {
+            if v == "1" {
+                if let Some(backtrace) = ErrorCompat::backtrace(&e) {
+                    eprintln!("{}", backtrace);
+                }
+            }
+        }
+    }
 }
