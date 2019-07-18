@@ -101,7 +101,7 @@ struct ContextFormat {
     json: Option<PathBuf>,
 
     /// YAML file path to read context values.
-    /// "." to indicate reading from default ".tera.yml"
+    /// "." to indicate reading from default ".tera.yaml"
     #[structopt(name = "yaml", long, group = "format", parse(from_os_str))]
     yaml: Option<PathBuf>,
 
@@ -179,7 +179,7 @@ fn read_context(conf: &Args) -> CliResult<Context> {
         Ok(context)
     } else if let Some(ref path) = conf.context.yaml {
         // YAML
-        let path = get_config_path(path, ".yml");
+        let path = get_config_path(path, ".yaml");
         let value: serde_yaml::Value = serde_yaml::from_str(
             &fs::read_to_string(&path).context(FileRead { path })?,
         )
