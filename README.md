@@ -10,8 +10,12 @@ The following context formats are supported:
 
 - JSON context file (`--json .` defaults to `.tera.json`)
 - TOML context file (`--toml .` defaults to `.tera.toml`)
-- YAML context file (`--yaml .` defaults to `.tera.yml`)
+- YAML context file (`--yaml .` defaults to `.tera.yaml`)
 - Environment variables
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md).
 
 ## Simple Examples
 
@@ -20,7 +24,7 @@ The following context formats are supported:
 Template `template.tmpl`
 
 ```jinja
-{% if c.hello %}{{ c.msg }}{% endif %}
+{% if hello %}{{ msg }}{% endif %}
 ```
 
 TOML `.tera.toml`
@@ -48,7 +52,7 @@ Hello World!
 Template `template.tmpl`
 
 ```jinja
-{% if c.MSG %}{{ c.MSG }}{% endif %}
+{% if MSG %}{{ MSG }}{% endif %}
 ```
 
 STDOUT
