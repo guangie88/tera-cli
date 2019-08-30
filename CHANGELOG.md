@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## `v0.2.1`
+
+- Fix exit code not return non-zero value during error
+  ([#6](https://github.com/guangie88/tera-cli/pull/6)).
+
 ## `v0.2.0`
 
 - Drops root key support entirely
