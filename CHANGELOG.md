@@ -2,7 +2,7 @@
 
 ## `v0.2.1`
 
-- Fix exit code not return non-zero value during error
+- Fix and return non-zero exit code during error
   ([#6](https://github.com/guangie88/tera-cli/pull/6)).
 
 ## `v0.2.0`
