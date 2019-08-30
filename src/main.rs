@@ -6,6 +6,7 @@ use std::{
     env, fs,
     io::{self, Read},
     path::{Path, PathBuf},
+    process,
 };
 use structopt::{clap::ArgGroup, StructOpt};
 use tera::{Context, Tera};
@@ -232,5 +233,7 @@ fn main() {
                 }
             }
         }
+
+        process::exit(1);
     }
 }
