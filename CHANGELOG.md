@@ -7,7 +7,7 @@
 
 ## `v0.2.0`
 
-- Drops root key support entirely
+- Drop root key support entirely
   ([#4](https://github.com/guangie88/tera-cli/pull/4)).
   Only allow variable file to contain `map[string, value]` at root. The keys of
   the map now forms the root keys.
@@ -23,4 +23,4 @@
 ## `v0.1.0`
 
 - Initial implementation with JSON, TOML and env var support.
-- Reads all possible values into a default root key `c`.
+- Read all possible values into a default root key `c`.
