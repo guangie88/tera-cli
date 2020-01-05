@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## Unreleased
+
+- Use Tera stable release `v1.y.z`!
+
 ## `v0.2.1`
 
 - Fix and return non-zero exit code during error

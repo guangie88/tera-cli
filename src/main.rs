@@ -70,7 +70,7 @@ fn format_arg_group() -> ArgGroup<'static> {
 
 /// Leave empty to read from STDIN
 #[derive(StructOpt, Debug)]
-#[structopt(raw(group = "input_arg_group()"))]
+#[structopt(group(input_arg_group()))]
 struct Input {
     /// File path to read template content from
     #[structopt(
@@ -89,7 +89,7 @@ struct Input {
 
 /// Context format file type to read from.
 #[derive(StructOpt, Debug)]
-#[structopt(raw(group = "format_arg_group()"))]
+#[structopt(group(format_arg_group()))]
 struct ContextFormat {
     /// TOML file path to read context values.
     /// "." to indicate reading from default ".tera.toml"
