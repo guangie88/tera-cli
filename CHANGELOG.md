@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## Unreleased
+## `v0.3.0`
 
 - Use Tera stable release `v1.y.z`!
 
