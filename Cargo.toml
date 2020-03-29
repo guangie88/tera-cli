@@ -1,6 +1,6 @@
 [package]
 name = "tera-cli"
-version = "0.3.0"
+version = "0.4.0"
 authors = ["Chen Weiguang <chen.weiguang@gmail.com>"]
 description = "Tera CLI for one-off template interpolation from context file / env vars"
 edition = "2018"
@@ -9,7 +9,7 @@ categories = ["command-line-utilities", "value-formatting"]
 license = "MIT"
 
 [dependencies]
-tera = "1.0.1"
+tera = "1.2.0"
 structopt = "0.3.7"
 serde = "1.0.104"
 toml = "0.5.5"
