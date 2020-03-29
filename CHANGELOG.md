@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## `v0.4.0`
+
+- Update Tera to `v1.2.0`. Tera changelog can be found at:
+  <https://github.com/Keats/tera/blob/master/CHANGELOG.md#120-2020-03-29>.
+
 ## `v0.3.0`
 
 - Use Tera stable release `v1.y.z`!
