@@ -1,8 +1,8 @@
 # Tera CLI
 
-[![Codefresh build status]( https://g.codefresh.io/api/badges/pipeline/guangie88/guangie88%2Ftera-cli%2Ftera-cli?branch=master&key=eyJhbGciOiJIUzI1NiJ9.NWM4MjcyMzg3Y2NkOTUzZTcxM2RiMjRl.cTJ8XB8rM4mRl2LmZBHaIVZ92MxdGgb7Mmib1jt8o4E&type=cf-1)]( https://g.codefresh.io/pipelines/tera-cli/builds?repoOwner=guangie88&repoName=tera-cli&serviceName=guangie88%2Ftera-cli&filter=trigger:build~Build;branch:master;pipeline:5caf53ed82cf987fd3e392b9~tera-cli)
-[![Crates.io](https://img.shields.io/crates/v/tera-cli.svg)](https://crates.io/crates/tera-cli)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![CI Status](https://img.shields.io/github/workflow/status/guangie88/tera-cli/ci/master?label=ci&logo=github&style=for-the-badge)](https://github.com/guangie88/tera-cli/actions)
+[![Crates.io](https://img.shields.io/crates/v/tera-cli?style=for-the-badge)](https://crates.io/crates/tera-cli)
+[![License: MIT](https://img.shields.io/github/license/guangie88/tera-cli?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
 Tera CLI for one-off template interpolation from context file / env vars.
 
@@ -81,3 +81,8 @@ tera --help
 
 Thanks to original Tera author, whose GitHub repository is at:
 <https://github.com/Keats/tera>.
+
+Also thanks to `BurntSushi` and his `ripgrep` repository showcase of GitHub
+Actions for cross-compilation, which has been copied and adapted heavily into
+this repository. The original files are here:
+<https://github.com/BurntSushi/ripgrep/tree/12.0.1/.github/workflows>.
