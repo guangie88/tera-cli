@@ -15,7 +15,6 @@ on:
   release:   # For testing, do a release on v0.0.0 (then delete it)
     types:
     - created
-    - published
 
 jobs:
   set-release-vars:
@@ -26,16 +25,17 @@ jobs:
         run: mkdir artifacts
 
       - name: Get the release version from the tag
-        if: env.APP_VERSION == ''
+        if: env.RELEASE_VERSION == ''
         run: |
-          echo "::set-env name=APP_VERSION::${GITHUB_REF}"
-          echo "version is: ${{ env.APP_VERSION }}"
+          RELEASE_VERSION=${GITHUB_REF#refs/tags/}
+          echo "::set-env name=RELEASE_VERSION::${RELEASE_VERSION}"
+          echo "version is: ${RELEASE_VERSION}"
 
       - name: Save release upload URL to artifact
         run: echo "${{ steps.release.outputs.upload_url }}" > artifacts/release-upload-url
 
       - name: Save version number to artifact
-        run: echo "${{ env.APP_VERSION }}" > artifacts/release-version
+        run: echo "${{ env.RELEASE_VERSION }}" > artifacts/release-version
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v1
@@ -207,12 +207,13 @@ jobs:
       with:
         name: artifacts
         path: artifacts
-    - name: Retrieve and set release version
+    - name: Retrieve release version and remove dirty artifacts
       shell: bash
       run: |
         release_version="$(cat artifacts/release-version)"
         echo "::set-env name=RELEASE_VERSION::$release_version"
         echo "release version: $RELEASE_VERSION"
+        rm -rf artifacts/
     - name: Publish to crates.io
       if: env.RELEASE_VERSION != 'v0.0.0'
       run: |
