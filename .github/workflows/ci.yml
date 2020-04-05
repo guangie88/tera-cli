@@ -135,35 +135,6 @@ jobs:
       if: matrix.target != ''
       run: ${{ env.CARGO }} test --verbose --all ${{ env.TARGET_FLAGS }}
 
-    - name: Test for existence of build artifacts (Windows)
-      if: matrix.os == 'windows-2019'
-      shell: bash
-      run: |
-        outdir="$(ci/cargo-out-dir "${{ env.TARGET_DIR }}")"
-        ls "$outdir/_rg.ps1" && file "$outdir/_rg.ps1"
-
-    - name: Test for existence of build artifacts (Unix)
-      if: matrix.os != 'windows-2019'
-      shell: bash
-      run: |
-        outdir="$(ci/cargo-out-dir "${{ env.TARGET_DIR }}")"
-        # TODO: Check for the man page generation here. For whatever reason,
-        # it seems to be intermittently failing in CI. No idea why.
-        # for f in tera.bash tera.fish tera.1; do
-        for f in tera.bash tera.fish; do
-          # We could use file -E here, but it isn't supported on macOS.
-          ls "$outdir/$f" && file "$outdir/$f"
-        done
-
-    - name: Test zsh shell completions (Unix, sans cross)
-      # We could test this when using Cross, but we'd have to execute the
-      # 'tera' binary (done in test-complete) with qemu, which is a pain and
-      # doesn't really gain us much. If shell completion works in one place,
-      # it probably works everywhere.
-      if: matrix.target == '' && matrix.os != 'windows-2019'
-      shell: bash
-      run: ci/test-complete
-
   rustfmt:
     name: rustfmt
     runs-on: ubuntu-18.04
