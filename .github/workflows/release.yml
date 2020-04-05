@@ -1,10 +1,10 @@
-# The way this works is a little weird. But basically, the create-release job
+# The way this works is a little weird. But basically, the set-release-vars job
 # runs purely to initialize the GitHub release itself. Once done, the upload
 # URL of the release is saved as an artifact.
 #
-# The build-release job runs only once create-release is finished. It gets
+# The build-release job runs only once set-release-vars is finished. It gets
 # the release upload URL by downloading the corresponding artifact (which was
-# uploaded by create-release). It then builds the release executables for each
+# uploaded by set-release-vars). It then builds the release executables for each
 # supported platform and attaches them as release assets to the previously
 # created release.
 #
@@ -16,9 +16,10 @@ on:
     types:
     - created
     - published
+
 jobs:
-  create-release:
-    name: create-release
+  set-release-vars:
+    name: set-release-vars
     runs-on: ubuntu-latest
     steps:
       - name: Create artifacts directory
@@ -27,7 +28,7 @@ jobs:
       - name: Get the release version from the tag
         if: env.APP_VERSION == ''
         run: |
-          echo "::set-env name=APP_VERSION::${GITHUB_REF##*/}"
+          echo "::set-env name=APP_VERSION::${GITHUB_REF}"
           echo "version is: ${{ env.APP_VERSION }}"
 
       - name: Save release upload URL to artifact
@@ -44,7 +45,7 @@ jobs:
 
   build-release:
     name: build-release
-    needs: ['create-release']
+    needs: ['set-release-vars']
     runs-on: ${{ matrix.os }}
     env:
       CARGO: cargo
@@ -189,6 +190,7 @@ jobs:
 
   cargo-publish:
     name: cargo publish
+    needs: ['set-release-vars']
     runs-on: ubuntu-18.04
     steps:
     - name: Checkout repository
@@ -200,13 +202,19 @@ jobs:
         override: true
         profile: minimal
         components: clippy
-    - name: Get the release version from the tag
-      if: env.APP_VERSION == ''
+    - name: Get release download URL
+      uses: actions/download-artifact@v1
+      with:
+        name: artifacts
+        path: artifacts
+    - name: Retrieve and set release version
+      shell: bash
       run: |
-        echo "::set-env name=APP_VERSION::${GITHUB_REF##*/}"
-        echo "version is: ${{ env.APP_VERSION }}"
+        release_version="$(cat artifacts/release-version)"
+        echo "::set-env name=RELEASE_VERSION::$release_version"
+        echo "release version: $RELEASE_VERSION"
     - name: Publish to crates.io
-      if: env.APP_VERSION != 'v0.0.0'
+      if: env.RELEASE_VERSION != 'v0.0.0'
       run: |
         cargo login ${{ secrets.CRATES_IO_TOKEN }}
         cargo publish
