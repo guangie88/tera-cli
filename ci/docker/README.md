@@ -19,6 +19,6 @@ stick, they need to be pushed to Docker Hub:
 
     $ docker push burntsushi/cross:x86_64-unknown-linux-musl
 
-Of course, only I (BurntSushi) can push to that location. To make `cross` use
+Of course, only I (guangie88) can push to that location. To make `cross` use
 a different location, then edit `Cross.toml` in the root of this repo to use
 a different image name for the desired target.

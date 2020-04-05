@@ -23,7 +23,7 @@ jobs:
     strategy:
       matrix:
         build:
-        # We test ripgrep on a pinned version of Rust, along with the moving
+        # We test tera-cli on a pinned version of Rust, along with the moving
         # targets of 'stable' and 'beta' for good measure.
         - pinned
         - stable
@@ -106,11 +106,8 @@ jobs:
         echo "cargo command is: ${{ env.CARGO }}"
         echo "target flag is: ${{ env.TARGET_FLAGS }}"
 
-    - name: Build ripgrep and all crates
+    - name: Build tera-cli and all crates
       run: ${{ env.CARGO }} build --verbose --all ${{ env.TARGET_FLAGS }}
-
-    - name: Build ripgrep with PCRE2
-      run: ${{ env.CARGO }} build --verbose --all --features pcre2 ${{ env.TARGET_FLAGS }}
 
     # This is useful for debugging problems when the expected build artifacts
     # (like shell completions and man pages) aren't generated.
@@ -126,11 +123,11 @@ jobs:
         fi
         set -x
 
-    - name: Run tests with PCRE2 (sans cross)
+    - name: Run tests (sans cross)
       if: matrix.target == ''
-      run: ${{ env.CARGO }} test --verbose --all --features pcre2 ${{ env.TARGET_FLAGS }}
+      run: ${{ env.CARGO }} test --verbose --all ${{ env.TARGET_FLAGS }}
 
-    - name: Run tests without PCRE2 (with cross)
+    - name: Run tests (with cross)
       # These tests should actually work, but they almost double the runtime.
       # Every integration test spins up qemu to run 'rg', and when PCRE2 is
       # enabled, every integration test is run twice: one with the default
