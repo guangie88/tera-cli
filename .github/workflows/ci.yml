@@ -168,3 +168,20 @@ jobs:
     - name: Check clippy linting
       run: |-
         cargo clippy -v --locked --all
+
+  cargo-publish-dryrun:
+    name: cargo publish (dry run)
+    runs-on: ubuntu-18.04
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+    - name: Install Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
+        profile: minimal
+        components: clippy
+    - name: Publish to crates.io
+      run: |-
+        cargo publish --dry-run
