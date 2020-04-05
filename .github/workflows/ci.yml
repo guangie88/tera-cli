@@ -59,7 +59,7 @@ jobs:
           # docker run --rm -v $PWD/target:/target:Z \
           #   rustembedded/cross:arm-unknown-linux-gnueabihf \
           #   arm-linux-gnueabihf-strip \
-          #   /target/arm-unknown-linux-gnueabihf/debug/rg
+          #   /target/arm-unknown-linux-gnueabihf/debug/tera
           target: arm-unknown-linux-gnueabihf
         - build: macos
           os: macos-latest
@@ -129,7 +129,7 @@ jobs:
 
     - name: Run tests (with cross)
       # These tests should actually work, but they almost double the runtime.
-      # Every integration test spins up qemu to run 'rg', and when PCRE2 is
+      # Every integration test spins up qemu to run 'tera', and when PCRE2 is
       # enabled, every integration test is run twice: one with the default
       # regex engine and once with PCRE2.
       if: matrix.target != ''
@@ -149,15 +149,15 @@ jobs:
         outdir="$(ci/cargo-out-dir "${{ env.TARGET_DIR }}")"
         # TODO: Check for the man page generation here. For whatever reason,
         # it seems to be intermittently failing in CI. No idea why.
-        # for f in rg.bash rg.fish rg.1; do
-        for f in rg.bash rg.fish; do
+        # for f in tera.bash tera.fish tera.1; do
+        for f in tera.bash tera.fish; do
           # We could use file -E here, but it isn't supported on macOS.
           ls "$outdir/$f" && file "$outdir/$f"
         done
 
     - name: Test zsh shell completions (Unix, sans cross)
       # We could test this when using Cross, but we'd have to execute the
-      # 'rg' binary (done in test-complete) with qemu, which is a pain and
+      # 'tera' binary (done in test-complete) with qemu, which is a pain and
       # doesn't really gain us much. If shell completion works in one place,
       # it probably works everywhere.
       if: matrix.target == '' && matrix.os != 'windows-2019'
