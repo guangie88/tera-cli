@@ -31,9 +31,6 @@ jobs:
           echo "::set-env name=RELEASE_VERSION::${RELEASE_VERSION}"
           echo "version is: ${RELEASE_VERSION}"
 
-      - name: Save release upload URL to artifact
-        run: echo "${{ steps.release.outputs.upload_url }}" > artifacts/release-upload-url
-
       - name: Save version number to artifact
         run: echo "${{ env.RELEASE_VERSION }}" > artifacts/release-version
 
@@ -130,15 +127,12 @@ jobs:
         name: artifacts
         path: artifacts
 
-    - name: Set release upload URL and release version
+    - name: Set release version
       shell: bash
       run: |
-        release_upload_url="$(cat artifacts/release-upload-url)"
-        echo "::set-env name=RELEASE_UPLOAD_URL::$release_upload_url"
-        echo "release upload url: $RELEASE_UPLOAD_URL"
-        release_version="$(cat artifacts/release-version)"
-        echo "::set-env name=RELEASE_VERSION::$release_version"
-        echo "release version: $RELEASE_VERSION"
+        RELEASE_VERSION="$(cat artifacts/release-version)"
+        echo "::set-env name=RELEASE_VERSION::${RELEASE_VERSION}"
+        echo "release version: ${RELEASE_VERSION}"
 
     - name: Build release binary
       run: ${{ env.CARGO }} build --verbose --release ${{ env.TARGET_FLAGS }}
@@ -181,9 +175,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: ${{ github.ref }}
-        release_name: ${{ github.ref }}
-        upload_url: ${{ env.RELEASE_UPLOAD_URL }}
+        upload_url: ${{ github.event.release.upload_url }}
         asset_path: ${{ env.ASSET }}
         asset_name: ${{ env.ASSET }}
         asset_content_type: application/octet-stream
@@ -210,9 +202,9 @@ jobs:
     - name: Retrieve release version and remove dirty artifacts
       shell: bash
       run: |
-        release_version="$(cat artifacts/release-version)"
-        echo "::set-env name=RELEASE_VERSION::$release_version"
-        echo "release version: $RELEASE_VERSION"
+        RELEASE_VERSION="$(cat artifacts/release-version)"
+        echo "::set-env name=RELEASE_VERSION::${RELEASE_VERSION}"
+        echo "release version: ${RELEASE_VERSION}"
         rm -rf artifacts/
     - name: Publish to crates.io
       if: env.RELEASE_VERSION != 'v0.0.0'
