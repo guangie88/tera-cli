@@ -197,6 +197,6 @@ jobs:
         override: true
         profile: minimal
         components: clippy
-    - name: Check formatting
+    - name: Check clippy linting
       run: |-
         cargo clippy -v --locked --all
