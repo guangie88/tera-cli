@@ -200,8 +200,13 @@ jobs:
         override: true
         profile: minimal
         components: clippy
+    - name: Get the release version from the tag
+      if: env.APP_VERSION == ''
+      run: |
+        echo "::set-env name=APP_VERSION::${GITHUB_REF##*/}"
+        echo "version is: ${{ env.APP_VERSION }}"
     - name: Publish to crates.io
       if: env.APP_VERSION != 'v0.0.0'
-      run: |-
+      run: |
         cargo login ${{ secrets.CRATES_IO_TOKEN }}
         cargo publish
