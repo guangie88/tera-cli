@@ -149,7 +149,7 @@ jobs:
         profile: minimal
         components: rustfmt
     - name: Check formatting
-      run: |-
+      run: |
         cargo fmt -v --all -- --check
 
   clippy:
@@ -166,5 +166,22 @@ jobs:
         profile: minimal
         components: clippy
     - name: Check clippy linting
-      run: |-
+      run: |
         cargo clippy -v --locked --all
+
+  cargo-publish-dryrun:
+    name: cargo publish (dry run)
+    runs-on: ubuntu-18.04
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+    - name: Install Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
+        profile: minimal
+        components: clippy
+    - name: Publish to crates.io
+      run: |
+        cargo publish --dry-run

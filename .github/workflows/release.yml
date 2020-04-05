@@ -12,46 +12,29 @@
 
 name: release
 on:
-  push:
-    # Enable when testing release infrastructure on a branch.
-    branches:
-    - experimental
-    tags:
-    - 'v[0-9]+.[0-9]+.[0-9]+'
+  release:   # For testing, do a release on v0.0.0 (then delete it)
+    types:
+    - created
+    - published
 jobs:
   create-release:
     name: create-release
     runs-on: ubuntu-latest
-    # env:
-      # Set to force version number, e.g., when no tag exists.
-      # RG_VERSION: TEST-0.0.0
     steps:
       - name: Create artifacts directory
         run: mkdir artifacts
 
       - name: Get the release version from the tag
-        if: env.RG_VERSION == ''
+        if: env.APP_VERSION == ''
         run: |
-          # Apparently, this is the right way to get a tag name. Really?
-          #
-          # See: https://github.community/t5/GitHub-Actions/How-to-get-just-the-tag-name/m-p/32167/highlight/true#M1027
-          echo "::set-env name=RG_VERSION::${GITHUB_REF#refs/tags/}"
-          echo "version is: ${{ env.RG_VERSION }}"
-
-      - name: Create GitHub release
-        id: release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ env.RG_VERSION }}
-          release_name: ${{ env.RG_VERSION }}
+          echo "::set-env name=APP_VERSION::${GITHUB_REF##*/}"
+          echo "version is: ${{ env.APP_VERSION }}"
 
       - name: Save release upload URL to artifact
         run: echo "${{ steps.release.outputs.upload_url }}" > artifacts/release-upload-url
 
       - name: Save version number to artifact
-        run: echo "${{ env.RG_VERSION }}" > artifacts/release-version
+        run: echo "${{ env.APP_VERSION }}" > artifacts/release-version
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v1
@@ -203,3 +186,27 @@ jobs:
         asset_path: ${{ env.ASSET }}
         asset_name: ${{ env.ASSET }}
         asset_content_type: application/octet-stream
+
+  cargo-publish:
+    name: cargo publish
+    runs-on: ubuntu-18.04
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+    - name: Install Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
+        profile: minimal
+        components: clippy
+    - name: Get the release version from the tag
+      if: env.APP_VERSION == ''
+      run: |
+        echo "::set-env name=APP_VERSION::${GITHUB_REF##*/}"
+        echo "version is: ${{ env.APP_VERSION }}"
+    - name: Publish to crates.io
+      if: env.APP_VERSION != 'v0.0.0'
+      run: |
+        cargo login ${{ secrets.CRATES_IO_TOKEN }}
+        cargo publish
