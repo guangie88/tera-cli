@@ -14,8 +14,8 @@ name: release
 on:
   push:
     # Enable when testing release infrastructure on a branch.
-    # branches:
-    # - ag/release
+    branches:
+    - experimental
     tags:
     - 'v[0-9]+.[0-9]+.[0-9]+'
 jobs:
@@ -177,28 +177,28 @@ jobs:
       run: |
         outdir="$(ci/cargo-out-dir "${{ env.TARGET_DIR }}")"
         staging="tera-cli-${{ env.RELEASE_VERSION }}-${{ matrix.target }}"
-        mkdir -p "$staging"/{complete,doc}
+        mkdir -p "$staging"
 
-        cp {README.md,LICENSE} "$staging/"
-        cp {CHANGELOG.md} "$staging/doc/"
+        cp {README.md,CHANGELOG.md,LICENSE} "$staging/"
 
         if [ "${{ matrix.os }}" = "windows-2019" ]; then
           cp "target/${{ matrix.target }}/release/tera.exe" "$staging/"
           7z a "$staging.zip" "$staging"
           echo "::set-env name=ASSET::$staging.zip"
         else
-          # The man page is only generated on Unix systems. ¯\_(ツ)_/¯
-          cp "$outdir"/tera.1 "$staging/doc/"
+          # The man page is only generated on Unix systems.
           cp "target/${{ matrix.target }}/release/tera" "$staging/"
           tar czf "$staging.tar.gz" "$staging"
           echo "::set-env name=ASSET::$staging.tar.gz"
         fi
 
     - name: Upload release archive
-      uses: actions/upload-release-asset@v1.0.1
+      uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
+        tag_name: ${{ github.ref }}
+        release_name: ${{ github.ref }}
         upload_url: ${{ env.RELEASE_UPLOAD_URL }}
         asset_path: ${{ env.ASSET }}
         asset_name: ${{ env.ASSET }}
