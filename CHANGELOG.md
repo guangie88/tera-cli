@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## `v0.4.1`
+
+- Patch version updates to all the used components. Should behave the same as
+  `v0.4.0`.
+- Builds for all major OS x architecture:
+  - `linux`
+  - `linux-arm`
+  - `macos`
+  - `win-msvc`
+  - `win-gnu`
+
 ## `v0.4.0`
 
 - Update Tera to `v1.2.0`. Tera changelog can be found at:
