@@ -67,10 +67,6 @@ working directory. Similarly, setting `--json .` looks for `.tera.json` in
 current working directory. Use `--toml file_to_toml` to change the path to the
 context file.
 
-Also, the parsed value from any of the context type (i.e. TOML / JSON / env
-vars) is stored into `c` as root key in the Tera context. If you wish to change
-the root key to say `conf`, use `-r conf` to override.
-
 For more details, run
 
 ```bash
