@@ -15,7 +15,7 @@ serde = "1.0.151"
 toml = "0.5.10"
 serde_json = "1.0.91"
 serde_yaml = "0.9.16"
-snafu = "0.6.10"
+snafu = "0.7.4"
 
 [[bin]]
 name = "tera"

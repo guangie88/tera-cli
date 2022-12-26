@@ -131,12 +131,12 @@ struct Args {
 
 fn read_template(conf: &Args) -> CliResult<String> {
     if let Some(ref path) = conf.input.file {
-        Ok(fs::read_to_string(&path).context(FileRead { path })?)
+        Ok(fs::read_to_string(&path).context(FileReadSnafu { path })?)
     } else if let Some(ref content) = conf.input.string {
         Ok(content.clone())
     } else {
         let mut buffer = String::new();
-        io::stdin().read_to_string(&mut buffer).context(StdinRead)?;
+        io::stdin().read_to_string(&mut buffer).context(StdinReadSnafu)?;
         Ok(buffer)
     }
 }
@@ -154,10 +154,10 @@ fn read_context(conf: &Args) -> CliResult<Context> {
         // TOML
         let path = get_config_path(path, ".toml");
         let value = fs::read_to_string(&path)
-            .context(FileRead { path })?
+            .context(FileReadSnafu { path })?
             .parse::<toml::Value>()
-            .context(TomlParsing)?;
-        let table = value.as_table().context(InvalidValueType)?;
+            .context(TomlParsingSnafu)?;
+        let table = value.as_table().context(InvalidValueTypeSnafu)?;
 
         let mut context = Context::new();
         for (k, v) in table.iter() {
@@ -168,10 +168,10 @@ fn read_context(conf: &Args) -> CliResult<Context> {
         // JSON
         let path = get_config_path(path, ".json");
         let value = fs::read_to_string(&path)
-            .context(FileRead { path })?
+            .context(FileReadSnafu { path })?
             .parse::<serde_json::Value>()
-            .context(JsonParsing)?;
-        let object = value.as_object().context(InvalidValueType)?;
+            .context(JsonParsingSnafu)?;
+        let object = value.as_object().context(InvalidValueTypeSnafu)?;
 
         let mut context = Context::new();
         for (k, v) in object.iter() {
@@ -182,17 +182,17 @@ fn read_context(conf: &Args) -> CliResult<Context> {
         // YAML
         let path = get_config_path(path, ".yaml");
         let value: serde_yaml::Value = serde_yaml::from_str(
-            &fs::read_to_string(&path).context(FileRead { path })?,
+            &fs::read_to_string(&path).context(FileReadSnafu { path })?,
         )
-        .context(YamlParsing)?;
+        .context(YamlParsingSnafu)?;
 
         // YAML specs for mapping allows for keys to be YAML value
         // so have to individually check for the root level keys to be strings
-        let mapping = value.as_mapping().context(InvalidValueType)?;
+        let mapping = value.as_mapping().context(InvalidValueTypeSnafu)?;
 
         let mut context = Context::new();
         for (k, v) in mapping.iter() {
-            let k = k.as_str().context(YamlInvalidKey { key: k.clone() })?;
+            let k = k.as_str().context(YamlInvalidKeySnafu { key: k.clone() })?;
             context.insert(k, v);
         }
         Ok(context)
@@ -216,7 +216,7 @@ fn main_inner() -> CliResult<()> {
     let context = read_context(&conf)?;
     let template = read_template(&conf)?;
     let rendered = Tera::one_off(&template, &context, conf.autoescape)
-        .context(TeraApply)?;
+        .context(TeraApplySnafu)?;
 
     print!("{}", rendered);
     Ok(())
