@@ -1,6 +1,6 @@
 # Tera CLI
 
-[![CI Status](https://img.shields.io/github/workflow/status/guangie88/tera-cli/ci/master?label=ci&logo=github&style=for-the-badge)](https://github.com/guangie88/tera-cli/actions)
+[![CI Status](https://img.shields.io/github/actions/workflow/status/guangie88/tera-cli/.github/workflows/ci.yml?branch=master&label=ci&logo=github&style=for-the-badge)](https://github.com/guangie88/tera-cli/actions)
 [![Crates.io](https://img.shields.io/crates/v/tera-cli?style=for-the-badge)](https://crates.io/crates/tera-cli)
 [![License: MIT](https://img.shields.io/github/license/guangie88/tera-cli?style=for-the-badge)](https://opensource.org/licenses/MIT)
 

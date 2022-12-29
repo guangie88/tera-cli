@@ -20,6 +20,9 @@ jobs:
   set-release-vars:
     name: set-release-vars
     runs-on: ubuntu-22.04
+    outputs:
+      upload_url: ${{ steps.release.outputs.upload_url }}
+      tag_version: ${{ env.TAG_VERSION }}
     steps:
       - name: Create artifacts directory
         run: mkdir artifacts
@@ -40,37 +43,9 @@ jobs:
           name: artifacts
           path: artifacts
 
-  create-release:
-    name: create-release
-    runs-on: ubuntu-22.04
-    # env:
-      # Set to force version number, e.g., when no tag exists.
-      # TAG_VERSION: TEST-0.0.0
-    outputs:
-      upload_url: ${{ steps.release.outputs.upload_url }}
-      app_version: ${{ env.TAG_VERSION }}
-    steps:
-      - name: Get the release version from the tag
-        shell: bash
-        if: env.TAG_VERSION == ''
-        run: |
-          # Apparently, this is the right way to get a tag name. Really?
-          #
-          # See: https://github.community/t5/GitHub-Actions/How-to-get-just-the-tag-name/m-p/32167/highlight/true#M1027
-          echo "TAG_VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
-          echo "version is: ${{ env.TAG_VERSION }}"
-      - name: Create GitHub release
-        id: release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ env.TAG_VERSION }}
-          release_name: ${{ env.TAG_VERSION }}
-
   build-release:
     name: build-release
-    needs: ['create-release']
+    needs: ['set-release-vars']
     runs-on: ${{ matrix.os }}
     env:
       # For some builds, we use cross to test on 32-bit and big-endian
@@ -165,7 +140,7 @@ jobs:
       shell: bash
       run: |
         outdir="$(ci/cargo-out-dir "${{ env.TARGET_DIR }}")"
-        staging="tera-cli-${{ needs.create-release.outputs.app_version }}-${{ matrix.target }}"
+        staging="tera-cli-${{ needs.set-release-vars.outputs.tag_version }}-${{ matrix.target }}"
 
         cp LICENSE "$staging/"
 
@@ -185,7 +160,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        upload_url: ${{ needs.create-release.outputs.upload_url }}
+        upload_url: ${{ needs.set-release-vars.outputs.upload_url }}
         asset_path: ${{ env.ASSET }}
         asset_name: ${{ env.ASSET }}
         asset_content_type: application/octet-stream
