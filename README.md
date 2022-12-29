@@ -81,4 +81,4 @@ Thanks to original Tera author, whose GitHub repository is at:
 Also thanks to `BurntSushi` and his `ripgrep` repository showcase of GitHub
 Actions for cross-compilation, which has been copied and adapted heavily into
 this repository. The original files are here:
-<https://github.com/BurntSushi/ripgrep/tree/12.0.1/.github/workflows>.
+<https://github.com/BurntSushi/ripgrep/tree/8905d54a9f25f4c1e4e3ca8331f517473e174d87/.github/workflows>.
