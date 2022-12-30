@@ -21,9 +21,15 @@ jobs:
     name: set-release-vars
     runs-on: ubuntu-22.04
     outputs:
-      upload_url: ${{ steps.release.outputs.upload_url }}
+      upload_url: ${{ steps.get_release.outputs.upload_url }}
       tag_version: ${{ env.TAG_VERSION }}
     steps:
+      - name: Get release
+        id: get_release
+        uses: bruceadams/get-release@v1.3.2
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
       - name: Create artifacts directory
         run: mkdir artifacts
 
