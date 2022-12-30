@@ -69,26 +69,32 @@ jobs:
         include:
         - build: linux
           os: ubuntu-22.04
+          cross: false
           rust: nightly
           target: x86_64-unknown-linux-musl
         - build: linux-arm
           os: ubuntu-22.04
+          cross: true
           rust: nightly
           target: arm-unknown-linux-gnueabihf
         - build: macos
           os: macos-12
+          cross: false
           rust: nightly
           target: x86_64-apple-darwin
         - build: win-msvc
           os: windows-2022
+          cross: false
           rust: nightly
           target: x86_64-pc-windows-msvc
         - build: win-gnu
           os: windows-2022
+          cross: false
           rust: nightly-x86_64-gnu
           target: x86_64-pc-windows-gnu
         - build: win32-msvc
           os: windows-2022
+          cross: false
           rust: nightly
           target: i686-pc-windows-msvc
 
@@ -112,11 +118,14 @@ jobs:
         toolchain: ${{ matrix.rust }}
         target: ${{ matrix.target }}
 
-    - name: Use Cross
-      shell: bash
+    - name: Use Cross (if applicable)
+      if: matrix.cross == 'true'
       run: |
         cargo install cross
         echo "CARGO=cross" >> $GITHUB_ENV
+
+    - name: Set targets
+      run: |
         echo "TARGET_FLAGS=--target ${{ matrix.target }}" >> $GITHUB_ENV
         echo "TARGET_DIR=./target/${{ matrix.target }}" >> $GITHUB_ENV
 
