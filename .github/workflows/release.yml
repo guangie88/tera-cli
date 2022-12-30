@@ -142,6 +142,7 @@ jobs:
         outdir="$(ci/cargo-out-dir "${{ env.TARGET_DIR }}")"
         staging="tera-cli-${{ needs.set-release-vars.outputs.tag_version }}-${{ matrix.target }}"
 
+        mkdir -p "$staging"
         cp LICENSE "$staging/"
 
         if [ "${{ matrix.os }}" = "windows-2022" ]; then
