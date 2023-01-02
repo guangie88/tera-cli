@@ -5,8 +5,24 @@ on:
     branches:
     - master
 jobs:
+  # Same as release.yml, except simplified and overwrite uploaded assets
+  # This requires a v0.0.0 release to be created for experimentation
+  set-release-vars:
+    name: set-release-vars
+    runs-on: ubuntu-22.04
+    outputs:
+      tag_version: ${{ env.TAG_VERSION }}
+    steps:
+      - name: Get the release version from the tag
+        if: env.TAG_VERSION == ''
+        run: |
+          TAG_VERSION=v0.0.0
+          echo "TAG_VERSION=${TAG_VERSION}" >> $GITHUB_ENV
+          echo "version is: ${TAG_VERSION}"
+
   build-release:
     name: build-release
+    needs: ['set-release-vars']
     runs-on: ${{ matrix.os }}
     env:
       # For some builds, we use cross to test on 32-bit and big-endian
@@ -21,9 +37,6 @@ jobs:
     strategy:
       matrix:
         build:
-        - pinned
-        - stable
-        - beta
         - nightly
         - nightly-musl
         - nightly-32
@@ -33,43 +46,42 @@ jobs:
         - win-msvc
         - win-gnu
         include:
-        - build: pinned
-          os: ubuntu-22.04
-          rust: 1.65.0
-        - build: stable
-          os: ubuntu-22.04
-          rust: stable
-        - build: beta
-          os: ubuntu-22.04
-          rust: beta
         - build: nightly
           os: ubuntu-22.04
           rust: nightly
+          build_suffix: x86_64-unknown-linux-gnu
         - build: nightly-musl
           os: ubuntu-22.04
           rust: nightly
           target: x86_64-unknown-linux-musl
+          build_suffix: x86_64-unknown-linux-musl
         - build: nightly-32
           os: ubuntu-22.04
           rust: nightly
           target: i686-unknown-linux-gnu
+          build_suffix: i686-unknown-linux-gnu
         - build: nightly-mips
           os: ubuntu-22.04
           rust: nightly
           target: mips64-unknown-linux-gnuabi64
+          build_suffix: mips64-unknown-linux-gnuabi64
         - build: nightly-arm
           os: ubuntu-22.04
           rust: nightly
           target: arm-unknown-linux-gnueabihf
+          build_suffix: arm-unknown-linux-gnueabihf
         - build: macos
           os: macos-12
           rust: nightly
+          build_suffix: x86_64-apple-darwin
         - build: win-msvc
           os: windows-2022
           rust: nightly
+          build_suffix: x86_64-pc-windows-msvc
         - build: win-gnu
           os: windows-2022
           rust: nightly-x86_64-gnu
+          build_suffix: x86_64-pc-windows-gnu
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
@@ -122,7 +134,7 @@ jobs:
       shell: bash
       run: |
         outdir="$(ci/cargo-out-dir "${{ env.TARGET_DIR }}")"
-        staging="tera-cli-v0.0.0-${{ matrix.target }}"
+        staging="tera-cli-${{ needs.set-release-vars.outputs.tag_version }}-${{ matrix.build_suffix }}"
 
         mkdir -p "$staging"
         cp LICENSE "$staging/"
@@ -138,6 +150,14 @@ jobs:
           echo "ASSET=$staging.tar.gz" >> $GITHUB_ENV
         fi
 
+    - name: Upload release archive
+      uses: svenstaro/upload-release-action@v2
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: ${{ env.ASSET }}
+        asset_name: ${{ env.ASSET }}
+        tag: ${{ needs.set-release-vars.outputs.tag_version }}
+        overwrite: true
 
   test:
     name: test
