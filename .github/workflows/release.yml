@@ -205,6 +205,7 @@ jobs:
         rm -rf artifacts/
     - name: Publish to crates.io
       if: env.TAG_VERSION != 'v0.0.0'
+      env:
+        CARGO_REGISTRY_TOKEN: ${{ secrets.CRATES_IO_TOKEN }}
       run: |
-        cargo login ${{ secrets.CRATES_IO_TOKEN }}
         cargo publish
